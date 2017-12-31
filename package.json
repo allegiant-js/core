@@ -1,0 +1,43 @@
+{
+    "name": "@allegiant/core",
+    "version": "0.0.7",
+    "description": "Small modular, effective app framework",
+    "author": "echopoint <echopoint@tutanota.com>",
+    "contributors": [],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/allegiant-js/core/issues"
+    },
+    "homepage": "https://github.com/allegiant-js/core#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/allegiant-js/core.git"
+    },
+    "keywords": [
+        "app",
+        "application",
+        "server",
+        "framework"
+    ],
+    "engine": {
+        "node": "> 7.6"
+    },
+    "main": "index.js",
+    "scripts": {
+        "lint": "eslint .",
+        "test": "tap test/index.js",
+        "coverage": "tap test/*.js --coverage",
+        "example": "cd example && node basic.js",
+        "example-sessions": "cd example && node sessions.js"
+    },
+    "dependencies": {
+        "@allegiant/common": "0.0.5",
+        "@allegiant/httpduplex": "^0.3.6",
+        "@allegiant/static": "0.0.6"
+    },
+    "devDependencies": {
+        "eslint": "^4.11.0",
+        "jsdoc": "^3.5.5",
+        "tap": "^11.0.1"
+    }
+}
