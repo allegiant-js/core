@@ -76,10 +76,15 @@ class ClientRequest extends httpDuplex {
         return typeof http.STATUS_CODES[code] === 'string' ? http.STATUS_CODES[code] : '';
     }
 
+    redirect(uri, status=302) {
+        this.setHeader('location', uri);
+        return status;
+    }
+    
     // leaving intact for now, though it's not needed
     end(content) {
         if (!this.fin) {
-            console.log("@@@@@ ENDED BEFORE FIN: " + this.fname); // eslint-disable-line
+            if (this.debug) console.log("@@@@@ ENDED BEFORE FIN: " + this.fname); // eslint-disable-line
         }
 
         httpDuplex.prototype.end.call(this, content);
@@ -87,7 +92,7 @@ class ClientRequest extends httpDuplex {
 
     async streamReadable(readable) {
         return new Promise((resolve) => {
-            readable.on('errror', async function() {
+            readable.on('error', async function() {
                 return resolve(false);
             }.bind(this))
             .on('end', async function() {
@@ -121,7 +126,7 @@ class ClientRequest extends httpDuplex {
 class App {
 
     constructor(host, port, options={}) {
-        const filteredOptions = ['secure','certs'],
+        const filteredOptions = [ 'debug','secure','certs' ],
               defaultModules = [ ['@allegiant/static', expect(options.static, true) ] ];
 
         this.ev = {
@@ -135,11 +140,12 @@ class App {
             },
         };
 
-        this.router = new Router();
-
+        this.debug = typeof options.debug === 'boolean' ? options.debug : false;
         this.host = host;
         this.port = port;
-        
+
+        this.router = new Router();
+
         // limit post data, stops flood, nuke, like attacks and bad client requests
         this.postDataLimit = expect(options.postDataLimit, 1e6); // 1e6 = 1,000,000
 
@@ -193,7 +199,7 @@ class App {
         } 
 
         if (this.moduleLoaded(module)) {
-            console.log(":: Module Already Loaded: ", module); // eslint-disable-line
+            if (this.debug) console.log(":: Module Already Loaded: ", module); // eslint-disable-line
             return;
         }
 
@@ -210,7 +216,7 @@ class App {
                 continue;
             
             if (typeof this.modules[name].bind === 'function') {
-                console.log("Binding Module: ", name); // eslint-disable-line
+                if (this.debug) console.log("Binding Module: ", name); // eslint-disable-line
                 this.modules[name].bind(this);
             }
         }
@@ -248,9 +254,9 @@ class App {
         } else {
             await this.awaitEvent(conn, 'serve', 'static');
         }
-        
-            this._finalize(conn, true);
-        }
+
+        this._finalize(conn, true);
+    }
 
     get(uri, handler=false) {
         this.router._addScan('GET', uri, handler);
@@ -279,7 +285,7 @@ class App {
             conn.writeHead(conn.statusCode, conn.getStatusMessage(conn.statusCode))
                 .end(conn.content.length > 0 ? conn.content : null);
         } else {
-            console.log("WARNING: CONNECTION ALREADY ENDED: ", conn.uri); // eslint-disable-line
+            if (this.debug) console.log("WARNING: CONNECTION ALREADY ENDED: ", conn.uri); // eslint-disable-line
         }
 
         await this.awaitEvent(conn, 'end');
@@ -287,7 +293,6 @@ class App {
 
     start() {
         this.server.listen(this.port, this.host);
-        //console.log("Routes: ", util.inspect(this.router.getRoutes(), { depth: 5 }));
     }
     
     close() {
@@ -305,7 +310,6 @@ class App {
         switch (event) {
             case 'serve':
                 handlers = options ? this.ev[event][options] : [];
-                //handlers = Array.prototype.concat.apply([], options.map(key => this.ev[event][key]));
                 break;
             default:
                 handlers = this.ev[event];
@@ -323,7 +327,7 @@ class App {
             case 'requestInit':
             case 'request':
             case 'end':
-                console.log("::    Binding App Event: " + event); // eslint-disable-line
+                if (this.debug) console.log("::    Binding App Event: " + event); // eslint-disable-line
                 if (this.ev[event].indexOf(cb) == -1)
                     this.ev[event].push(cb);
             break;
@@ -332,7 +336,7 @@ class App {
                     case 'static':
                     case 'dynamic':
                     case 'any':
-                        console.log("::    Binding App Event: " + event + ": ", option); // eslint-disable-line
+                        if (this.debug) console.log("::    Binding App Event: " + event + ": ", option); // eslint-disable-line
                         if (this.ev[event][option].indexOf(cb) == -1)
                             this.ev[event][option].push(cb);
                     break;

@@ -1,6 +1,6 @@
 {
     "name": "@allegiant/core",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "description": "Small modular, effective app framework",
     "author": "echopoint <echopoint@tutanota.com>",
     "contributors": [],
@@ -33,7 +33,7 @@
     "dependencies": {
         "@allegiant/common": "0.0.5",
         "@allegiant/httpduplex": "^0.3.6",
-        "@allegiant/static": "0.0.6"
+        "@allegiant/static": "0.0.7"
     },
     "devDependencies": {
         "eslint": "^4.11.0",
