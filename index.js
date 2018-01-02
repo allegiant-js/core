@@ -155,10 +155,7 @@ class App {
         this.modules={};
 
         // default modules
-        this.loadModules(defaultModules.concat(
-                Object.entries(options).filter(obj => !filteredOptions.includes(obj[0]))
-            )
-        );
+        this.loadModules(defaultModules.concat(Object.entries(options).filter(obj => !filteredOptions.includes(obj[0]))));
         this.binder();
 
         this.server = createServer(this.handler.bind(this));
@@ -247,12 +244,13 @@ class App {
         
         if (endpoint !== false) {
             await this.awaitEvent(conn, 'serve', 'dynamic');
-            this._finalize(conn, await endpoint.handler.apply(conn, Object.values(endpoint.params[2])));
+            conn.status = await endpoint.handler.apply(conn, Object.values(endpoint.params[2]));
         } else {
             await this.awaitEvent(conn, 'serve', 'static');
+        }
+        
             this._finalize(conn, true);
         }
-    }
 
     get(uri, handler=false) {
         this.router._addScan('GET', uri, handler);
@@ -278,7 +276,8 @@ class App {
     async _finalize(conn, res) {  // eslint-disable-line
         if (!conn.fin) {
             conn.fin = true;
-            conn.end(conn.content.length > 0 ? conn.content : '');
+            conn.writeHead(conn.statusCode, conn.getStatusMessage(conn.statusCode))
+                .end(conn.content.length > 0 ? conn.content : null);
         } else {
             console.log("WARNING: CONNECTION ALREADY ENDED: ", conn.uri); // eslint-disable-line
         }
