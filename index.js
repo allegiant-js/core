@@ -282,10 +282,10 @@ class App {
     async _finalize(conn, res) {  // eslint-disable-line
         if (!conn.fin) {
             conn.fin = true;
-            conn.writeHead(conn.statusCode, conn.getStatusMessage(conn.statusCode))
+            conn.writeHead(conn.status, conn.getStatusMessage(conn.status))
                 .end(conn.content.length > 0 ? conn.content : null);
-        } else {
-            if (this.debug) console.log("WARNING: CONNECTION ALREADY ENDED: ", conn.uri); // eslint-disable-line
+        } else if (this.debug) {
+            console.log("WARNING: CONNECTION ALREADY ENDED: ", conn.uri); // eslint-disable-line
         }
 
         await this.awaitEvent(conn, 'end');
