@@ -24,7 +24,7 @@ class ClientRequest extends httpDuplex {
         this.semver = false;
         this.uri = decodeURI(url.parse(req.url).pathname);
         this.fname = this.uri;
-        this.query = url.parse(req.url, true).query || {};
+        this.query = this.urlDataDecode(req.url);
         this.status = 200;
         this.body = false;
         this.content = '';
@@ -34,7 +34,7 @@ class ClientRequest extends httpDuplex {
         app.awaitEvent(this, 'requestInit');
 
         var decoders = {
-            'application/x-www-form-urlencoded': this.decodeFormUrlData.bind(this),
+            'application/x-www-form-urlencoded': this.urlDataDecode.bind(this),
             'application/json': common.parseJson
         };
 
@@ -58,9 +58,25 @@ class ClientRequest extends httpDuplex {
         setTimeout(this.emit.bind(this, 'ready', this), 1);
     }
 
-    decodeFormUrlData(content) {
-        var data={};
-        content.split('&').map(v => v.split('=')).forEach(val => data[val[0]] = decodeURIComponent(val[1]));
+    urlDataDecode(content) {
+        var tmp, 
+            data={};
+
+        if (content != void 0 && content.length > 0) {
+            tmp = content.indexOf('?');
+            content.slice(tmp < 0 ? 0 : tmp+1)
+            .split('&').map(v => v.split('='))
+            .forEach((val) => {
+                if (val.length < 2) { 
+                    return; 
+                } else if (val.length > 2) {
+                    val[1] = val.slice(1).join('=');
+                }
+
+                data[val[0]] = decodeURIComponent(val[1]);
+            });
+        }
+
         return data;
     }
 
@@ -282,8 +298,7 @@ class App {
     async _finalize(conn, res) {  // eslint-disable-line
         if (!conn.fin) {
             conn.fin = true;
-            conn.writeHead(conn.status, conn.getStatusMessage(conn.status))
-                .end(conn.content.length > 0 ? conn.content : null);
+            conn.end(conn.content.length > 0 ? conn.content : null);
         } else if (this.debug) {
             console.log("WARNING: CONNECTION ALREADY ENDED: ", conn.uri); // eslint-disable-line
         }

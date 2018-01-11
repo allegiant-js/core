@@ -1,6 +1,6 @@
 {
     "name": "@allegiant/core",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Small modular, effective app framework",
     "author": "echopoint <echopoint@tutanota.com>",
     "contributors": [],
@@ -26,9 +26,7 @@
     "scripts": {
         "lint": "eslint .",
         "test": "tap test/index.js",
-        "coverage": "tap test/*.js --coverage",
-        "example": "cd example && node basic.js",
-        "example-sessions": "cd example && node sessions.js"
+        "coverage": "tap test/*.js --coverage"
     },
     "dependencies": {
         "@allegiant/common": "0.0.5",
